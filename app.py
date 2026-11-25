@@ -1,7 +1,8 @@
 
 # ==========================================
-#           NEON ACADEMY
+#             NEON ACADEMY
 # ==========================================
+
 
 # 1. IMPORTAR LIBRERIAS
 
@@ -51,13 +52,6 @@ h1, h2, h3, p, label {
     color: white;
     padding: 25px;
     border-radius: 15px;
-    text-align: center;
-}
-
-.resultado {
-    background-color: #E8E3D5;
-    padding: 20px;
-    border-radius: 12px;
     text-align: center;
 }
 
@@ -111,6 +105,7 @@ def mostrar_calendario():
 
     html = """
     <style>
+
     .calendario {
         width: 100%;
         border-collapse: separate;
@@ -144,6 +139,7 @@ def mostrar_calendario():
         background-color: #526B4D !important;
         color: white !important;
     }
+
     </style>
 
     <table class="calendario">
@@ -163,10 +159,10 @@ def mostrar_calendario():
 
             if dia == 0:
                 html += "<td></td>"
+
             else:
 
                 fecha = date(año, mes, dia)
-
                 clase_css = ""
 
                 if fecha in FERIADOS:
@@ -204,7 +200,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# DATOS DEL PROFESOR
+# ==========================================
+# 7. DATOS DEL PROFESOR
+# ==========================================
 
 st.subheader("📚 Datos del profesor")
 
@@ -215,42 +213,68 @@ nombre = st.text_input(
 
 materia = st.text_input(
     "Materia",
-    placeholder="Escribe el nombre de tu materia"
+    placeholder="Escribe tu materia"
 )
 
 
-# BOTON DE CONSULTA
+# ==========================================
+# 8. CONFIRMACION Y CONSULTA
+# ==========================================
+
+st.subheader("Confirmar datos")
+
+confirmacion = st.radio(
+    "¿Los datos ingresados son correctos?",
+    ["Sí", "No"],
+    horizontal=True
+)
 
 if st.button("CONSULTAR MIS HORAS"):
 
-    if nombre.strip() == "" or materia.strip() == "":
+    try:
 
-        st.warning("Debes ingresar tu nombre y materia.")
+        if nombre.strip() == "" or materia.strip() == "":
 
-    else:
+            st.warning("Debes ingresar tu nombre y materia.")
 
-        clases, horas = contar_horas()
+        elif confirmacion == "No":
 
-        st.success("Consulta realizada correctamente.")
+            st.warning("Revisa tus datos antes de realizar la consulta.")
 
-        st.subheader("📋 Resultado de consulta")
+        elif confirmacion == "Sí":
 
-        st.write("**Profesor:**", nombre)
+            clases, horas = contar_horas()
 
-        st.write("**Materia:**", materia)
+            st.success("Consulta realizada correctamente.")
 
-        col1, col2 = st.columns(2)
+            st.subheader("📋 Resultado de consulta")
 
-        with col1:
-            st.metric("Clases restantes", clases)
+            st.write("**Profesor:**", nombre)
+            st.write("**Materia:**", materia)
 
-        with col2:
-            st.metric("Horas restantes", horas)
+            col1, col2 = st.columns(2)
 
-        st.info("Fecha de finalización: 28 de noviembre de 2026")
+            with col1:
+                st.metric("Clases restantes", clases)
+
+            with col2:
+                st.metric("Horas restantes", horas)
+
+            st.info("Fecha de finalización: 28 de noviembre de 2026")
+
+        else:
+
+            st.warning("Selecciona una opción válida.")
+
+    except Exception as error:
+
+        st.error("Ocurrió un error al realizar la consulta.")
+        st.write(error)
 
 
-# CALENDARIO ACADEMICO
+# ==========================================
+# 9. CALENDARIO ACADEMICO
+# ==========================================
 
 st.divider()
 
