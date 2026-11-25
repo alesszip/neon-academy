@@ -3,7 +3,6 @@
 #             NEON ACADEMY
 # ==========================================
 
-
 # 1. IMPORTAR LIBRERIAS
 
 import streamlit as st
@@ -21,15 +20,11 @@ st.set_page_config(
     layout="centered"
 )
 
+FECHA_INICIO = date(2026, 8, 10)
 FECHA_FIN = date(2026, 11, 28)
 
 DIAS_CLASE = [0, 1, 3]  # Lunes, martes y jueves
-
 HORAS_CLASE = 2
-
-FERIADOS = [
-    date(2026, 11, 16)
-]
 
 
 # ==========================================
@@ -38,23 +33,18 @@ FERIADOS = [
 
 st.markdown("""
 <style>
-
 .stApp {
     background-color: #F5F0DF;
 }
-
 h1, h2, h3, p, label {
     color: #344B36;
 }
-
 .titulo {
     background-color: #344B36;
-    color: white;
     padding: 25px;
     border-radius: 15px;
     text-align: center;
 }
-
 div.stButton > button {
     background-color: #526B4D;
     color: white;
@@ -63,7 +53,6 @@ div.stButton > button {
     height: 45px;
     font-weight: bold;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -72,15 +61,15 @@ div.stButton > button {
 # 4. FUNCION PARA CONTAR LAS HORAS
 # ==========================================
 
-def contar_horas():
+def contar_horas(excepciones):
 
-    hoy = date.today()
+    hoy = max(date.today(), FECHA_INICIO)
     fecha = hoy
     clases = 0
 
     while fecha <= FECHA_FIN:
 
-        if fecha.weekday() in DIAS_CLASE and fecha not in FERIADOS:
+        if fecha.weekday() in DIAS_CLASE and fecha not in excepciones:
             clases += 1
 
         fecha += timedelta(days=1)
@@ -94,7 +83,7 @@ def contar_horas():
 # 5. FUNCION PARA MOSTRAR EL CALENDARIO
 # ==========================================
 
-def mostrar_calendario():
+def mostrar_calendario(excepciones):
 
     año = 2026
     mes = 11
@@ -105,19 +94,16 @@ def mostrar_calendario():
 
     html = """
     <style>
-
     .calendario {
         width: 100%;
         border-collapse: separate;
         border-spacing: 5px;
         text-align: center;
     }
-
     .calendario th {
         color: #344B36;
         padding: 10px;
     }
-
     .calendario td {
         background-color: #E8E3D5;
         padding: 12px 5px;
@@ -125,23 +111,18 @@ def mostrar_calendario():
         color: #344B36;
         font-weight: bold;
     }
-
     .clase {
         background-color: #B8C9A5 !important;
     }
-
     .feriado {
         background-color: #D99A65 !important;
         color: white !important;
     }
-
     .actual {
         background-color: #526B4D !important;
         color: white !important;
     }
-
     </style>
-
     <table class="calendario">
     <tr>
     """
@@ -159,18 +140,15 @@ def mostrar_calendario():
 
             if dia == 0:
                 html += "<td></td>"
-
             else:
 
                 fecha = date(año, mes, dia)
                 clase_css = ""
 
-                if fecha in FERIADOS:
+                if fecha in excepciones:
                     clase_css = "feriado"
-
                 elif fecha == date.today():
                     clase_css = "actual"
-
                 elif fecha.weekday() in DIAS_CLASE:
                     clase_css = "clase"
 
@@ -182,14 +160,12 @@ def mostrar_calendario():
 
     st.markdown(html, unsafe_allow_html=True)
 
-    st.caption("🟩 Día de clase | 🟧 Día feriado | 🟢 Fecha actual")
+    st.caption("🟩 Día de clase | 🟧 Excepción | 🟢 Fecha actual")
 
 
 # ==========================================
-# 6. PROGRAMA PRINCIPAL
+# 6. ENCABEZADO
 # ==========================================
-
-# ENCABEZADO
 
 st.markdown("""
 <div class="titulo">
@@ -218,7 +194,49 @@ materia = st.text_input(
 
 
 # ==========================================
-# 8. CONFIRMACION Y CONSULTA
+# 8. SELECCIONAR EXCEPCIONES
+# ==========================================
+
+st.subheader("📅 Días de excepción")
+
+st.write("Selecciona las fechas en las que no habrá clases.")
+
+if "excepciones" not in st.session_state:
+    st.session_state.excepciones = []
+
+fecha_excepcion = st.date_input(
+    "Seleccionar fecha de excepción",
+    value=date(2026, 11, 16),
+    min_value=FECHA_INICIO,
+    max_value=FECHA_FIN
+)
+
+if st.button("Agregar día de excepción"):
+
+    if fecha_excepcion.weekday() not in DIAS_CLASE:
+        st.warning("La fecha seleccionada no corresponde a un día de clase.")
+
+    elif fecha_excepcion in st.session_state.excepciones:
+        st.warning("Esta fecha ya está registrada como excepción.")
+
+    else:
+        st.session_state.excepciones.append(fecha_excepcion)
+        st.success("Día de excepción agregado correctamente.")
+
+if st.session_state.excepciones:
+
+    st.write("**Fechas registradas:**")
+
+    for fecha in st.session_state.excepciones:
+        st.write("🟧", fecha.strftime("%d/%m/%Y"))
+
+    if st.button("Eliminar todas las excepciones"):
+        st.session_state.excepciones = []
+        st.rerun()
+
+
+# ==========================================
+# 9. CONFIRMACION Y CONSULTA
 # ==========================================
 
 st.subheader("Confirmar datos")
@@ -234,16 +252,16 @@ if st.button("CONSULTAR MIS HORAS"):
     try:
 
         if nombre.strip() == "" or materia.strip() == "":
-
             st.warning("Debes ingresar tu nombre y materia.")
 
         elif confirmacion == "No":
-
-            st.warning("Revisa tus datos antes de realizar la consulta.")
+            st.warning("Revisa tus datos antes de continuar.")
 
         elif confirmacion == "Sí":
 
-            clases, horas = contar_horas()
+            clases, horas = contar_horas(
+                st.session_state.excepciones
+            )
 
             st.success("Consulta realizada correctamente.")
 
@@ -262,10 +280,6 @@ if st.button("CONSULTAR MIS HORAS"):
 
             st.info("Fecha de finalización: 28 de noviembre de 2026")
 
-        else:
-
-            st.warning("Selecciona una opción válida.")
-
     except Exception as error:
 
         st.error("Ocurrió un error al realizar la consulta.")
@@ -273,7 +287,7 @@ if st.button("CONSULTAR MIS HORAS"):
 
 
 # ==========================================
-# 9. CALENDARIO ACADEMICO
+# 10. CALENDARIO ACADEMICO
 # ==========================================
 
 st.divider()
@@ -282,4 +296,4 @@ st.subheader("🍃 Calendario académico")
 
 st.write("Noviembre de 2026")
 
-mostrar_calendario()
+mostrar_calendario(st.session_state.excepciones)
