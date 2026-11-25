@@ -1,9 +1,19 @@
 
+# ==========================================
+#           NEON ACADEMY
+# ==========================================
+
+# 1. IMPORTAR LIBRERIAS
+
 import streamlit as st
 import calendar
 from datetime import date, timedelta
 
-# CONFIGURACION
+
+# ==========================================
+# 2. CONFIGURACION GENERAL
+# ==========================================
+
 st.set_page_config(
     page_title="NEON ACADEMY",
     page_icon="🌿",
@@ -11,95 +21,222 @@ st.set_page_config(
 )
 
 FECHA_FIN = date(2026, 11, 28)
-DIAS_CLASE = [0, 1, 3]
+
+DIAS_CLASE = [0, 1, 3]  # Lunes, martes y jueves
+
 HORAS_CLASE = 2
 
-FERIADOS = [date(2026, 11, 16)]
+FERIADOS = [
+    date(2026, 11, 16)
+]
 
 
-# CALCULAR HORAS
+# ==========================================
+# 3. DISEÑO DE LA PAGINA
+# ==========================================
+
+st.markdown("""
+<style>
+
+.stApp {
+    background-color: #F5F0DF;
+}
+
+h1, h2, h3, p, label {
+    color: #344B36;
+}
+
+.titulo {
+    background-color: #344B36;
+    color: white;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.resultado {
+    background-color: #E8E3D5;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+div.stButton > button {
+    background-color: #526B4D;
+    color: white;
+    border-radius: 10px;
+    width: 100%;
+    height: 45px;
+    font-weight: bold;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# ==========================================
+# 4. FUNCION PARA CONTAR LAS HORAS
+# ==========================================
+
 def contar_horas():
+
     hoy = date.today()
     fecha = hoy
     clases = 0
 
     while fecha <= FECHA_FIN:
+
         if fecha.weekday() in DIAS_CLASE and fecha not in FERIADOS:
             clases += 1
 
         fecha += timedelta(days=1)
 
-    return clases, clases * HORAS_CLASE
+    horas = clases * HORAS_CLASE
+
+    return clases, horas
 
 
-# CALENDARIO
+# ==========================================
+# 5. FUNCION PARA MOSTRAR EL CALENDARIO
+# ==========================================
+
 def mostrar_calendario():
-    st.subheader("🍃 Calendario de noviembre 2026")
 
-    semanas = calendar.monthcalendar(2026, 11)
+    año = 2026
+    mes = 11
+
+    semanas = calendar.monthcalendar(año, mes)
+
     dias = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
 
-    st.write(" | ".join(dias))
-    
+    html = """
+    <style>
+    .calendario {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 5px;
+        text-align: center;
+    }
+
+    .calendario th {
+        color: #344B36;
+        padding: 10px;
+    }
+
+    .calendario td {
+        background-color: #E8E3D5;
+        padding: 12px 5px;
+        border-radius: 8px;
+        color: #344B36;
+        font-weight: bold;
+    }
+
+    .clase {
+        background-color: #B8C9A5 !important;
+    }
+
+    .feriado {
+        background-color: #D99A65 !important;
+        color: white !important;
+    }
+
+    .actual {
+        background-color: #526B4D !important;
+        color: white !important;
+    }
+    </style>
+
+    <table class="calendario">
+    <tr>
+    """
+
+    for dia in dias:
+        html += f"<th>{dia}</th>"
+
+    html += "</tr>"
+
     for semana in semanas:
-        fila = []
+
+        html += "<tr>"
 
         for dia in semana:
+
             if dia == 0:
-                fila.append(" ")
+                html += "<td></td>"
             else:
-                fecha = date(2026, 11, dia)
+
+                fecha = date(año, mes, dia)
+
+                clase_css = ""
 
                 if fecha in FERIADOS:
-                    fila.append("🟧 " + str(dia))
+                    clase_css = "feriado"
+
+                elif fecha == date.today():
+                    clase_css = "actual"
+
                 elif fecha.weekday() in DIAS_CLASE:
-                    fila.append("🟩 " + str(dia))
-                else:
-                    fila.append(str(dia))
+                    clase_css = "clase"
 
-        st.write(" | ".join(fila))
+                html += f'<td class="{clase_css}">{dia}</td>'
 
-    st.caption("🟩 Día de clase | 🟧 Día feriado")
+        html += "</tr>"
+
+    html += "</table>"
+
+    st.markdown(html, unsafe_allow_html=True)
+
+    st.caption("🟩 Día de clase | 🟧 Día feriado | 🟢 Fecha actual")
 
 
-# DISEÑO
+# ==========================================
+# 6. PROGRAMA PRINCIPAL
+# ==========================================
+
+# ENCABEZADO
+
 st.markdown("""
-<style>
-.stApp {
-    background-color: #f5f0df;
-}
-h1, h2, h3, p, label {
-    color: #344b36 !important;
-}
-div.stButton > button {
-    background-color: #526b4d;
-    color: white;
-    border-radius: 10px;
-    width: 100%;
-}
-</style>
+<div class="titulo">
+    <h1 style="color:white;">🌿 NEON ACADEMY</h1>
+    <p style="color:white;">Tu asistente académico</p>
+    <p style="color:white;">Consulta las horas restantes del semestre</p>
+</div>
 """, unsafe_allow_html=True)
 
 
-# INTERFAZ PRINCIPAL
-st.title("🌿 NEON ACADEMY")
-st.write("Tu asistente académico")
-st.write("Consulta las horas restantes del semestre.")
+# DATOS DEL PROFESOR
 
-nombre = st.text_input("Nombre del profesor")
-materia = st.text_input("Materia")
+st.subheader("📚 Datos del profesor")
 
-if st.button("Consultar mis horas"):
+nombre = st.text_input(
+    "Nombre del profesor",
+    placeholder="Escribe tu nombre"
+)
+
+materia = st.text_input(
+    "Materia",
+    placeholder="Escribe el nombre de tu materia"
+)
+
+
+# BOTON DE CONSULTA
+
+if st.button("CONSULTAR MIS HORAS"):
 
     if nombre.strip() == "" or materia.strip() == "":
-        st.warning("Ingresa tu nombre y materia.")
+
+        st.warning("Debes ingresar tu nombre y materia.")
 
     else:
+
         clases, horas = contar_horas()
 
         st.success("Consulta realizada correctamente.")
 
+        st.subheader("📋 Resultado de consulta")
+
         st.write("**Profesor:**", nombre)
+
         st.write("**Materia:**", materia)
 
         col1, col2 = st.columns(2)
@@ -110,7 +247,15 @@ if st.button("Consultar mis horas"):
         with col2:
             st.metric("Horas restantes", horas)
 
-        st.write("Fecha de finalización: 28 de noviembre de 2026")
+        st.info("Fecha de finalización: 28 de noviembre de 2026")
 
+
+# CALENDARIO ACADEMICO
+
+st.divider()
+
+st.subheader("🍃 Calendario académico")
+
+st.write("Noviembre de 2026")
 
 mostrar_calendario()
